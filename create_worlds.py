@@ -3,12 +3,12 @@ import os
 import sys
 
 def main(args):
-    input = args[1]
-    with open(input) as input:
-        for line in input:
-            print(line, end='')
 
-    os.remove("world.db")
+    task_id =0
+
+
+    if os.path.isfile("world.db"):
+        os.remove("world.db")
     if not os.path.isfile("world.db"): #TODO: remove
         db = open("world.db", "w+")
 
@@ -38,11 +38,51 @@ def main(args):
                        "amount INT"
                        ")")
 
-    #     # let's get all students and print their entries
-    # cursor.execute("SELECT * FROM Students");
-    # studentslist = cursor.fetchall()
-    # print("All students as list:")
-    # print(studentslist)
+        input = args[1]
+        with open(input) as input:
+            for line in input:
+                count = 0
+                for char in line:
+                    if char == ",":
+                        count = count +1
+
+                if count==1: #resource
+                    pos1 = line.find(",")
+                    cursor.execute("INSERT INTO resources "
+                                   "VALUES(?,?)", (line[0:pos1], line[pos1+1:],))
+                if count==2: #worker
+                    pos1 = line.find(",")
+                    pos2 = line.rfind(",")
+                    cursor.execute("INSERT INTO workers "
+                                   "VALUES(?,?,?)", (line[pos1+1:pos2], line[pos2 + 1:len(line)-1], "idle",))
+
+                if count==4: #task
+                    pos1 = line.find(",")
+                    pos2 = pos1 + line[pos1+1:].find(",") +1
+                    pos3 = pos2 + line[pos2+1:].find(",") +1
+                    pos4 = line.rfind(",")
+                    task_id= task_id +1
+
+                    cursor.execute("INSERT INTO tasks "
+                                   "VALUES(?, ?, ?, ?, ?, ?)", (task_id,
+                                                                line[0:pos1],
+                                                                line[pos1+1:pos2],
+                                                                line[pos4+1:],
+                                                                line[pos2+1:pos3],
+                                                                line[pos3+1:pos4],
+                                                                ))
+
+        cursor.execute("SELECT * FROM tasks")
+        taskslist = cursor.fetchall();
+        print(taskslist)
+
+        cursor.execute("SELECT * FROM workers")
+        workers = cursor.fetchall();
+        print(workers)
+
+        cursor.execute("SELECT * FROM resources")
+        resources = cursor.fetchall();
+        print(resources)
 
 
 if __name__ == '__main__':
